@@ -50,14 +50,14 @@ public class Processor {
 
     public static void generateDR(){
         TreeMap<String, DR> Plan = DR_Plan.getDR_PLAN();
-        String siteScript = null;
+        String UtranBundle = null;
         for (Map.Entry<String, DR> entry : Plan.entrySet()) {
-            siteScript = XMLGenerator.generateSiteScript(entry.getValue().getSiteName(),
+            UtranBundle = XMLGenerator.generateUtranBundle(entry.getValue().getSiteName(),
                                                     entry.getValue().getSourceMTX(),
                                                   entry.getValue().getSourceRNC(), 
                                                   entry.getValue().getTargetMTX(), 
                                                   entry.getValue().getTargetRNC());
-            appendToFile(scriptsDir, entry.getValue().getSourceMTX(), entry.getValue().getTargetRNC(), "", siteScript);
+            appendToFile(scriptsDir, entry.getValue().getSourceMTX(), entry.getValue().getTargetRNC(), "UtranBundle", UtranBundle);
         }
     }
     
@@ -101,8 +101,7 @@ public class Processor {
         String conf ="C:\\Documents\\DR_3G\\DR3G.conf";
 //        String conf = args[0];
         initApp(conf);
-//        generateDR();
-        appendToFile(scriptsDir, "MTX-Source", "TargetRNC", "Relations", "<TESTING></TESTING>");
+        generateDR();
 
     }
 }

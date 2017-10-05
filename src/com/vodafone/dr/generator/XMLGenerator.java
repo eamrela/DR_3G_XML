@@ -28,13 +28,37 @@ import org.bson.Document;
  */
 public class XMLGenerator {
     
-    public static String generateSiteScript(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
+    
+    public static String generateUtranBundle(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
+        FindIterable<Document> utranCells = MongoDB.getUtranCellCollection().find(
+                and(Filters.regex("_id", ".*"+siteName+".*"),Filters.eq("RNC", sourceRNC)));
         
-        return null;
+        String utranCellBundle = "";
+        String utranCellBlock = "";
+        String pchFachRachHsdsch = "";
+        String serviceArea = "";
+        String locationArea = "";
+        String coverageRelations = "";
+        String embbededContent = "";
+        String id = null;
+        for(Document utranCell : utranCells){
+        id = utranCell.getString("UtranCellId");
+        utranCellBlock = getUtranCell(id, sourceMTX, sourceRNC, targetMTX, targetRNC);
+        pchFachRachHsdsch = getPchRachFachHsdsch(id, sourceMTX, sourceRNC, targetMTX, targetRNC);
+        serviceArea = getServiceArea(id, sourceMTX, sourceRNC, targetMTX, targetRNC);
+        locationArea = getLocationArea(id, sourceMTX, sourceRNC, targetMTX, targetRNC);
+        coverageRelations = getCoverageRelation(id, sourceMTX, sourceRNC, targetMTX, targetRNC);
+        
+        embbededContent = pchFachRachHsdsch+"\n"+serviceArea+"\n"+locationArea+"\n"+coverageRelations;
+        
+        utranCellBlock = utranCellBlock.replace("EMBBEDED-CONTENT", embbededContent);
+        utranCellBundle += utranCellBlock;
+        }
+        return utranCellBundle;
     }
     
     //VsDataContainer
-    public static void getLocationArea(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
+    public static String getLocationArea(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
         XMLEntity lacXML = XMLConf.getXmlEntities().get(ELEMENTS.LocationArea.toString());
         Document internallCell = MongoDB.getUtranCellCollection().find(
                 and(Filters.regex("_id", ".*"+siteName+".*"),Filters.eq("RNC", sourceRNC))).first();
@@ -45,18 +69,22 @@ public class XMLGenerator {
         param.put("lac", lac);
         param.put("att", "1");
         param.put("t3212", "20");
-            System.out.println(lacXML.generate(param));
+        return lacXML.generate(param,false);
         }
+        return "";
     }
     
     // Seperate
-    public static void getIubLink(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
+    public static String getIubLink(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
         XMLEntity iubLinkXML = XMLConf.getXmlEntities().get(ELEMENTS.IubLink.toString());
         FindIterable<Document> iubLinks = MongoDB.getIubLinkCollection().find(
                 and(Filters.regex("reservedBy", ".*"+siteName+".*"),Filters.eq("RNC", sourceRNC)));
         TreeMap<String,String> param = null;
+        String iubLinksStr="";
         for(Document iubLink : iubLinks){
         param = new TreeMap<>();
+        //<editor-fold defaultstate="collapsed" desc="comment">
+        
         param.put("id", iubLink.get("userLabel").toString());
         param.put("userLabel", iubLink.get("userLabel").toString());
         param.put("administrativeState", "0");
@@ -91,12 +119,14 @@ public class XMLGenerator {
         param.put("userPlaneIpResourceRef", iubLink.get("userPlaneIpResourceRef").toString());
         param.put("userPlaneTransportOption-atm", ((Document)iubLink.get("userPlaneTransportOption")).get("atm").toString());
         param.put("userPlaneTransportOption-ipv4", ((Document)iubLink.get("userPlaneTransportOption")).get("ipv4").toString());
-        System.out.println(iubLinkXML.generate(param));
+//</editor-fold>
+        iubLinksStr += iubLinkXML.generate(param,false);
         }
+        return iubLinksStr;
     }
     
     //VsDataContainer
-    public static void getServiceArea(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
+    public static String getServiceArea(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
         XMLEntity sacXML = XMLConf.getXmlEntities().get(ELEMENTS.ServiceArea.toString());
         FindIterable<Document> sacs = MongoDB.getSacCollection().find(
                 and(Filters.regex("reservedBy", ".*"+siteName+".*"),Filters.eq("RNC", sourceRNC)));
@@ -106,18 +136,22 @@ public class XMLGenerator {
         param.put("id", sac.getString("_id").replaceAll(sourceRNC+"_", ""));
         param.put("sac", sac.getString("sac"));
         param.put("userLabel",sac.getString("userLabel"));
-        System.out.println(sacXML.generate(param));
+        return sacXML.generate(param,false);
         }
+        return "";
     }
     
     //Seperate
-    public static void getExternalGsmCell(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
+    public static String getExternalGsmCell(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
         XMLEntity externalGsmCellXML = XMLConf.getXmlEntities().get(ELEMENTS.ExternalGsmCell.toString());
         FindIterable<Document> externalGsmCells = MongoDB.getExternalGsmCellCollection().find(
                 and(Filters.regex("reservedBy", ".*"+siteName+".*"),Filters.eq("RNC", sourceRNC)));
         TreeMap<String,String> param = null;
+        String externalGsmCellsStr="";
         for(Document externalGsmCell : externalGsmCells){
         param = new TreeMap<>();
+        //<editor-fold defaultstate="collapsed" desc="comment">
+        
         param.put("id", externalGsmCell.getString("_id").replaceAll(sourceRNC+"_", ""));
         param.put("bcc", externalGsmCell.getString("bcc"));
         param.put("bcchFrequency",externalGsmCell.getString("bcchFrequency"));
@@ -132,43 +166,69 @@ public class XMLGenerator {
         param.put("mcc",XMLConf.getMCC());
         param.put("mnc",XMLConf.getMNC());
         param.put("mncLength",XMLConf.getMNCLength());
-        System.out.println(externalGsmCellXML.generate(param));
+    //</editor-fold>
+        externalGsmCellsStr += externalGsmCellXML.generate(param,false);
         }
+        return externalGsmCellsStr;
     }
     
     //Seperate
-    public static void getUtranCell(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
+    public static String getUtranCell(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
         XMLEntity utranCellXML = XMLConf.getXmlEntities().get(ELEMENTS.UtranCell.toString());
         FindIterable<Document> utranCells = MongoDB.getUtranCellCollection().find(
                 and(Filters.regex("_id", ".*"+siteName+".*"),Filters.eq("RNC", sourceRNC)));
         TreeMap<String,String> param = null;
         String script="";
+        String sac = null;
+        String lac = null;
+        String utranCellIubLink = null;
+        String accessClassNBarred = null;
+        String accessClassesBarredCs = null;
+        String accessClassesBarredPs = null;
+        String spareA = null;
+        String utranCellsStr = "";
         for(Document utranCell : utranCells){
             //<editor-fold defaultstate="collapsed" desc="comment">
         param = new TreeMap<>();
         param.put("id", utranCell.getString("UtranCellId"));
         param.put("bchPower",utranCell.getString("bchPower"));
         param.put("cId",utranCell.getString("cId"));
-        param.put("lac",utranCell.getString("locationAreaRef"));
+        lac = utranCell.getString("locationAreaRef");
+        lac = lac.substring(lac.indexOf("LocationArea=")+13);
+        param.put("lac",lac);
         param.put("localCellId",utranCell.getString("localCellId"));
         param.put("maximumTransmissionPower",utranCell.getString("maximumTransmissionPower"));
         param.put("primaryCpichPower",utranCell.getString("primaryCpichPower"));
         param.put("primarySchPower",utranCell.getString("primarySchPower"));
         param.put("primaryScramblingCode",utranCell.getString("primaryScramblingCode"));
-        param.put("sac",utranCell.getString("serviceAreaRef"));
+        sac = utranCell.getString("serviceAreaRef");
+        sac = sac.substring(sac.indexOf("ServiceArea=")+12);
+        param.put("sac",sac);
         param.put("secondarySchPower",utranCell.getString("secondarySchPower"));
         param.put("uarfcnDl",utranCell.getString("uarfcnDl"));
         param.put("uarfcnUl",utranCell.getString("uarfcnUl"));
         param.put("userLabel",utranCell.getString("userLabel"));
+        utranCellIubLink = utranCell.getString("iubLinkRef");
+        utranCellIubLink = utranCellIubLink.substring(utranCellIubLink.indexOf("=")+1);
+        param.put("utranCellIubLink",utranCellIubLink);
         param.put("absPrioCellRes-cellReselectionPriority",((Document)utranCell.get("absPrioCellRes")).getString("cellReselectionPriority"));
         param.put("absPrioCellRes-measIndFach",((Document)utranCell.get("absPrioCellRes")).getString("measIndFach"));
         param.put("absPrioCellRes-sPrioritySearch1",((Document)utranCell.get("absPrioCellRes")).getString("sPrioritySearch1"));
         param.put("absPrioCellRes-sPrioritySearch2",((Document)utranCell.get("absPrioCellRes")).getString("sPrioritySearch2"));
         param.put("absPrioCellRes-threshServingLow",((Document)utranCell.get("absPrioCellRes")).getString("threshServingLow"));
-
-        param.put("accessClassNBarred",utranCell.getString("accessClassNBarred"));
-        param.put("accessClassesBarredCs",utranCell.getString("accessClassesBarredCs"));
-        param.put("accessClassesBarredPs",utranCell.getString("accessClassesBarredPs"));
+        
+        accessClassNBarred = utranCell.getString("accessClassNBarred");
+        accessClassNBarred = accessClassNBarred.replaceAll(",", " ");
+        
+        accessClassesBarredCs = utranCell.getString("accessClassesBarredCs");
+        accessClassesBarredCs = accessClassesBarredCs.replaceAll(",", " ");
+        
+        accessClassesBarredPs = utranCell.getString("accessClassesBarredPs");
+        accessClassesBarredPs = accessClassesBarredPs.replaceAll(",", " ");
+        
+        param.put("accessClassNBarred",accessClassNBarred);
+        param.put("accessClassesBarredCs",accessClassesBarredCs);
+        param.put("accessClassesBarredPs",accessClassesBarredPs);
 
         param.put("admBlockRedirection-gsmRrc",((Document)utranCell.get("admBlockRedirection")).getString("gsmRrc"));
         param.put("admBlockRedirection-rrc",((Document)utranCell.get("admBlockRedirection")).getString("rrc"));
@@ -297,12 +357,12 @@ public class XMLGenerator {
         param.put("minPwrMax",utranCell.getString("minPwrMax"));
         param.put("minPwrRl",utranCell.getString("minPwrRl"));
         param.put("minimumRate",utranCell.getString("minimumRate"));
-        param.put("mocnCellProfileRef",utranCell.getString("mocnCellProfileRef"));
+//        param.put("mocnCellProfileRef",utranCell.getString("mocnCellProfileRef"));
         param.put("nOutSyncInd",utranCell.getString("nOutSyncInd"));
 
-        param.put("pagingPermAccessCtrl-locRegAcb",((Document)utranCell.get("pagingPermAccessCtrl")).getString("locRegAcb"));
-        param.put("pagingPermAccessCtrl-locRegRestr",((Document)utranCell.get("pagingPermAccessCtrl")).getString("locRegRestr"));
-        param.put("pagingPermAccessCtrl-pagingRespRestr",((Document)utranCell.get("pagingPermAccessCtrl")).getString("pagingRespRestr"));
+//        param.put("pagingPermAccessCtrl-locRegAcb",((Document)utranCell.get("pagingPermAccessCtrl")).getString("locRegAcb"));
+//        param.put("pagingPermAccessCtrl-locRegRestr",((Document)utranCell.get("pagingPermAccessCtrl")).getString("locRegRestr"));
+//        param.put("pagingPermAccessCtrl-pagingRespRestr",((Document)utranCell.get("pagingPermAccessCtrl")).getString("pagingRespRestr"));
 
         param.put("pathlossThreshold",utranCell.getString("pathlossThreshold"));
         param.put("poolRedundancy",utranCell.getString("poolRedundancy"));
@@ -368,7 +428,11 @@ public class XMLGenerator {
         param.put("sf8gAdmUl",utranCell.getString("sf8gAdmUl"));
         param.put("sib1PlmnScopeValueTag",utranCell.getString("sib1PlmnScopeValueTag"));
         param.put("spare",utranCell.getString("spare"));
-        param.put("spareA",utranCell.getString("spareA"));
+        
+        spareA = utranCell.getString("spareA");
+        spareA = spareA.replaceAll(",", " ");
+        
+        param.put("spareA",spareA);
         param.put("srbAdmExempt",utranCell.getString("srbAdmExempt"));
         param.put("standAloneSrbSelector",utranCell.getString("standAloneSrbSelector"));
         param.put("tCell",utranCell.getString("tCell"));
@@ -391,12 +455,13 @@ public class XMLGenerator {
         param.put("usedFreqThresh2dRscp",utranCell.getString("usedFreqThresh2dRscp"));
         param.put("utranCellPosition","");
         //</editor-fold>
-        System.out.println(utranCellXML.generate(param));
+        utranCellsStr += utranCellXML.generate(param,true);
         }
+        return utranCellsStr;
     }
     
     //VsDataContainer
-    public static void getPchRachFachHsdsch(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
+    public static String getPchRachFachHsdsch(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
         XMLEntity pchXML = XMLConf.getXmlEntities().get(ELEMENTS.Pch.toString());
         XMLEntity fachXML = XMLConf.getXmlEntities().get(ELEMENTS.Fach.toString());
         XMLEntity rachXML = XMLConf.getXmlEntities().get(ELEMENTS.Rach.toString());
@@ -407,6 +472,7 @@ public class XMLGenerator {
         TreeMap<String,String> paramFach = null;
         TreeMap<String,String> paramRach = null;
         TreeMap<String,String> paramHsdsch = null;
+        String pchFachRachHsdschStr = "";
         for(Document uranCell : utranCells){
         paramPch = new TreeMap<>();
         paramFach = new TreeMap<>();
@@ -474,19 +540,21 @@ public class XMLGenerator {
         paramHsdsch.put("qam64Support",((Document)uranCell.get("Hsdsch")).getString("qam64Support"));
         paramHsdsch.put("userLabel","hsdsch "+((Document)uranCell.get("Hsdsch")).getString("HsdschId"));
         //</editor-fold>
-        System.out.println(pchXML.generate(paramPch));
-        System.out.println(fachXML.generate(paramFach));
-        System.out.println(rachXML.generate(paramRach));
-        System.out.println(hsdschXML.generate(paramHsdsch));
+        pchFachRachHsdschStr += pchXML.generate(paramPch,false);
+        pchFachRachHsdschStr += fachXML.generate(paramFach,false);
+        pchFachRachHsdschStr += rachXML.generate(paramRach,false);
+        pchFachRachHsdschStr += hsdschXML.generate(paramHsdsch,false);
         }
+        return pchFachRachHsdschStr;
     }
     
     //VsDataContainer
-    public static void getCoverageRelation(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
+    public static String getCoverageRelation(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
         XMLEntity coverageXML = XMLConf.getXmlEntities().get(ELEMENTS.CoverageRelation.toString());
         FindIterable<Document> coverageRelations = MongoDB.getCoverageRelationCollection().find(
                 and(Filters.regex("_id", ".*UtranCell=.*"+siteName+".*"),Filters.eq("RNC", sourceRNC)));
         TreeMap<String,String> param = null;
+        String coverageRelationStr="";
         for(Document coverageRelation : coverageRelations){
         param = new TreeMap<>();
         param.put("id",coverageRelation.getString("CoverageRelationId"));
@@ -499,17 +567,19 @@ public class XMLGenerator {
         param.put("relationCapability-powerSave",((Document)coverageRelation.get("relationCapability")).getString("powerSave"));
         param.put("utranCellRef",coverageRelation.getString("utranCellRef"));
        
-        System.out.println(coverageXML.generate(param));
+       coverageRelationStr += coverageXML.generate(param,false);
         }
+        return coverageRelationStr;
     }
     
     //Seperate
-    public static void getGsmRelation(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
+    public static String getGsmRelation(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
         XMLEntity gsmRelationXML = XMLConf.getXmlEntities().get(ELEMENTS.GsmRelation.toString());
         FindIterable<Document> gsmRelations = MongoDB.getGsmRelationCollection().find(
                 and(Filters.regex("_id", ".*"+siteName+".*"),Filters.eq("RNC", sourceRNC)));
         TreeMap<String,String> param = null;
         String id = null;
+        String gsmRelationStr="";
         for(Document gsmRelation : gsmRelations){
         param = new TreeMap<>();
         id = gsmRelation.getString("GsmRelationId");
@@ -518,17 +588,19 @@ public class XMLGenerator {
         param.put("mobilityRelationType",gsmRelation.getString("mobilityRelationType"));
         param.put("qOffset1sn",gsmRelation.getString("qOffset1sn"));
         param.put("selectionPriority",gsmRelation.getString("selectionPriority"));
-        System.out.println(gsmRelationXML.generate(param));
+        gsmRelationStr += gsmRelationXML.generate(param,false);
         }
+        return gsmRelationStr;
     }
     
     //Seperate
-    public static void getExternalUtranCell(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
+    public static String getExternalUtranCell(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
         XMLEntity externalUtranXML = XMLConf.getXmlEntities().get(ELEMENTS.ExternalUtranCell.toString());
         FindIterable<Document> externalUtranCells = MongoDB.getExternalUtranCellCollection().find(
                 and(Filters.regex("_id", ".*"+siteName+".*"),
                    Filters.not(Filters.eq("RNC", sourceRNC))));
         TreeMap<String,String> param = null;
+        String externalUtranCellStr="";
         String rncId = null;
         for(Document externalUtranCell : externalUtranCells){
         param = new TreeMap<>();
@@ -571,18 +643,20 @@ public class XMLGenerator {
         param.put("timeToTrigger1b",externalUtranCell.getString("timeToTrigger1b"));
         param.put("transmissionScheme",externalUtranCell.getString("transmissionScheme"));
         //</editor-fold>
-        System.out.println(externalUtranXML.generate(param));
+        externalUtranCellStr += externalUtranXML.generate(param,false);
         }
+        return externalUtranCellStr;
     }
     
     //Seperate
-    public static void getUtranRelation(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
+    public static String getUtranRelation(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
         XMLEntity utranRelationXML = XMLConf.getXmlEntities().get(ELEMENTS.UtranRelation.toString());
         FindIterable<Document> utranRelations = MongoDB.getUtranRelationCollection().find(
                 and(Filters.regex("_id", ".*UtranCell="+siteName+".*"),
                    Filters.eq("RNC", sourceRNC)));
         String id = null;
         TreeMap<String,String> param = null;
+        String utranRelationStr="";
         for(Document utranRelation : utranRelations){
         param = new TreeMap<>();
         id = utranRelation.getString("UtranRelationId"); 
@@ -609,8 +683,9 @@ public class XMLGenerator {
             // adjust RNC here
         }
 
-        System.out.println(utranRelationXML.generate(param));
+        utranRelationStr += utranRelationXML.generate(param,false);
         }
+        return utranRelationStr;
     }
     
     public static String getFileHeader(){
@@ -630,7 +705,7 @@ public class XMLGenerator {
     
     public static void main(String[] args) {
         initApp("C:\\Documents\\DR_3G\\DR3G.conf");
-        getUtranCell("D33221", "Source", "RNC26", "Target", "RNC30");
+        System.out.println(generateUtranBundle("UCAI2586", "Source", "CRX06", "Target", "RNC30"));
     }
     
    

@@ -277,17 +277,21 @@ public class XMLEntity {
         return entity;
     }
     
-    public String generate(TreeMap<String,String> param){
+    public String generate(TreeMap<String,String> param,boolean embbed){
         String entity = "";
         if(!gn.isEmpty()){
         if(entityType.equals("gn")){
+            if(getParam(param, "id")!=null){
             entity ="<gn:"+entityName+" id=\""+getParam(param, "id")+"\" modifier=\"create\">\n";
+            }
             //<editor-fold defaultstate="collapsed" desc="GN">
         if(!gn.isEmpty()){
             for (Map.Entry<String, XMLComplexElement> GN : gn.entrySet()) {
                 if(GN.getValue().getChilds().isEmpty()){
                     if(!GN.getValue().getName().contains(":")){
+                    if(getParam(param, GN.getValue().getName())!=null){
                     entity+="   <gn:"+GN.getValue().getName()+">"+getParam(param, GN.getValue().getName())+"</gn:"+GN.getValue().getName()+">\n";
+                    }
                     }
                 }else{
                     if(GN.getValue().getName().equals(entityName)){
@@ -298,15 +302,21 @@ public class XMLEntity {
                     for (Map.Entry<String, XMLComplexElement> child : GN.getValue().getChilds().entrySet()) {
                         if(child.getValue().getChilds().isEmpty()){
                           if(!child.getValue().getName().contains(":")){
+                              if(getParam(param, child.getValue().getName())!=null){
                         entity+="     <gn:"+child.getValue().getName()+">"+getParam(param, child.getValue().getName())+"</gn:"+child.getValue().getName()+">\n";
+                              }
                           }
                         }else{
                             entity+="    <gn:"+child.getValue().getName()+">\n";
                             for (Map.Entry<String, XMLComplexElement> grandChild : child.getValue().getChilds().entrySet()) {
                                 if(!grandChild.getValue().getName().contains(":")){
+                                    if(getParam(param, grandChild.getValue().getName())!=null){
                                 entity+="     <gn:"+grandChild.getValue().getName()+">"+getParam(param, grandChild.getValue().getName())+"</gn:"+grandChild.getValue().getName()+">\n";
+                                    }
                                 }
                             }
+                            
+                            
                             entity+="    </gn:"+child.getValue().getName()+">\n";
                         }
                     }
@@ -330,7 +340,9 @@ public class XMLEntity {
             for (Map.Entry<String, XMLComplexElement> UN : un.entrySet()) {
                 if(UN.getValue().getChilds().isEmpty()){
                     if(!UN.getValue().getName().contains(":")){
+                        if(getParam(param,  UN.getValue().getName())!=null){
                     entity+="   <un:"+UN.getValue().getName()+">"+getParam(param, UN.getValue().getName())+"</un:"+UN.getValue().getName()+">\n";
+                        }
                     }
                 }else{
                     if(UN.getValue().getName().equals(entityName)){
@@ -341,13 +353,17 @@ public class XMLEntity {
                     for (Map.Entry<String, XMLComplexElement> child : UN.getValue().getChilds().entrySet()) {
                         if(child.getValue().getChilds().isEmpty()){
                           if(!child.getValue().getName().contains(":")){
+                              if(getParam(param,  child.getValue().getName())!=null){
                         entity+="     <un:"+child.getValue().getName()+">"+getParam(param, child.getValue().getName())+"</un:"+child.getValue().getName()+">\n";
+                              }
                           }
                         }else{
                             entity+="    <un:"+child.getValue().getName()+">\n";
                             for (Map.Entry<String, XMLComplexElement> grandChild : child.getValue().getChilds().entrySet()) {
                                 if(!grandChild.getValue().getName().contains(":")){
+                                     if(getParam(param,  grandChild.getValue().getName())!=null){
                                 entity+="     <un:"+grandChild.getValue().getName()+">"+getParam(param, grandChild.getValue().getName())+"</un:"+grandChild.getValue().getName()+">\n";
+                                     }
                                 }
                             }
                             entity+="    </un:"+child.getValue().getName()+">\n";
@@ -374,7 +390,9 @@ public class XMLEntity {
             for (Map.Entry<String, XMLComplexElement> ES : es.entrySet()) {
                 if(ES.getValue().getChilds().isEmpty()){
                     if(!ES.getValue().getName().contains(":")){
+                        if(getParam(param,  ES.getValue().getName())!=null){
                     entity+="   <es:"+ES.getValue().getName()+">"+getParam(param, ES.getValue().getName())+"</es:"+ES.getValue().getName()+">\n";
+                        }
                     }
                 }else{
                     if(ES.getValue().getName().equals(entityName)){
@@ -385,13 +403,17 @@ public class XMLEntity {
                     for (Map.Entry<String, XMLComplexElement> child : ES.getValue().getChilds().entrySet()) {
                         if(child.getValue().getChilds().isEmpty()){
                             if(!child.getValue().getName().contains(":")){
+                                if(getParam(param,   child.getValue().getName())!=null){
                         entity+="     <es:"+child.getValue().getName()+">"+getParam(param, child.getValue().getName())+"</es:"+child.getValue().getName()+">\n";
+                                }
                             }
                         }else{
                             entity+="    <es:"+child.getValue().getName()+">\n";
                             for (Map.Entry<String, XMLComplexElement> grandChild : child.getValue().getChilds().entrySet()) {
                                 if(grandChild.getValue().getChilds().isEmpty()){
+                                    if(getParam(param,   child.getValue().getName())!=null){
                                 entity+="     <es:"+grandChild.getValue().getName()+">"+getParam(param, child.getValue().getName()+"-"+grandChild.getValue().getName())+"</es:"+grandChild.getValue().getName()+">\n";
+                                    }
                                 }
                             }
                             entity+="    </es:"+child.getValue().getName()+">\n";
@@ -407,6 +429,9 @@ public class XMLEntity {
         //</editor-fold>
         entity+=" </xn:attributes>\n";
         entity+=" </xn:VsDataContainer>\n";
+        if(embbed){
+            entity+="\nEMBBEDED-CONTENT\n";
+        }
         }
         if(!gn.isEmpty()){
         if(entityType.equals("gn")){
@@ -425,7 +450,7 @@ public class XMLEntity {
         if(param.containsKey(key)){
             return param.get(key);
         }else{
-            return "";
+            return null;
         }
     }
 }
