@@ -16,9 +16,20 @@ public class XMLComplexElement {
     private String name;
     private String value;
     private String type;
+    private Integer order;
     
     private TreeMap<String,XMLComplexElement> childs = new TreeMap<>();
 
+    public Integer getOrder() {
+        return order;
+    }
+
+    public XMLComplexElement setOrder(Integer order) {
+        this.order = order;
+        return this;
+    }
+
+    
     public String getType() {
         return type;
     }

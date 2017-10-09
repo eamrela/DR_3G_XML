@@ -51,6 +51,10 @@ public class Processor {
     public static void generateDR(){
         TreeMap<String, DR> Plan = DR_Plan.getDR_PLAN();
         String UtranBundle = null;
+        String ExtGsmCellBundle = null;
+        String ExtGsmRelationBundle = null;
+        String ExtUtranCellBundle = null;
+        String UtranRelationBundle = null;
         for (Map.Entry<String, DR> entry : Plan.entrySet()) {
             UtranBundle = XMLGenerator.generateUtranBundle(entry.getValue().getSiteName(),
                                                     entry.getValue().getSourceMTX(),
@@ -58,6 +62,30 @@ public class Processor {
                                                   entry.getValue().getTargetMTX(), 
                                                   entry.getValue().getTargetRNC());
             appendToFile(scriptsDir, entry.getValue().getSourceMTX(), entry.getValue().getTargetRNC(), "UtranBundle", UtranBundle);
+            ExtGsmCellBundle = XMLGenerator.generateUtranBundle(entry.getValue().getSiteName(),
+                                                    entry.getValue().getSourceMTX(),
+                                                  entry.getValue().getSourceRNC(), 
+                                                  entry.getValue().getTargetMTX(), 
+                                                  entry.getValue().getTargetRNC());
+            appendToFile(scriptsDir, entry.getValue().getSourceMTX(), entry.getValue().getTargetRNC(), "ExtGsmCellBundle", ExtGsmCellBundle);
+            ExtGsmRelationBundle = XMLGenerator.generateUtranBundle(entry.getValue().getSiteName(),
+                                                    entry.getValue().getSourceMTX(),
+                                                  entry.getValue().getSourceRNC(), 
+                                                  entry.getValue().getTargetMTX(), 
+                                                  entry.getValue().getTargetRNC());
+            appendToFile(scriptsDir, entry.getValue().getSourceMTX(), entry.getValue().getTargetRNC(), "ExtGsmRelationBundle", ExtGsmRelationBundle);
+            ExtUtranCellBundle = XMLGenerator.generateUtranBundle(entry.getValue().getSiteName(),
+                                                    entry.getValue().getSourceMTX(),
+                                                  entry.getValue().getSourceRNC(), 
+                                                  entry.getValue().getTargetMTX(), 
+                                                  entry.getValue().getTargetRNC());
+            appendToFile(scriptsDir, entry.getValue().getSourceMTX(), entry.getValue().getTargetRNC(), "ExtUtranCellBundle", ExtUtranCellBundle);
+            UtranRelationBundle = XMLGenerator.generateUtranBundle(entry.getValue().getSiteName(),
+                                                    entry.getValue().getSourceMTX(),
+                                                  entry.getValue().getSourceRNC(), 
+                                                  entry.getValue().getTargetMTX(), 
+                                                  entry.getValue().getTargetRNC());
+            appendToFile(scriptsDir, entry.getValue().getSourceMTX(), entry.getValue().getTargetRNC(), "UtranRelationBundle", UtranRelationBundle);
         }
     }
     

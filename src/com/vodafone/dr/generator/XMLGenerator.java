@@ -36,27 +36,40 @@ public class XMLGenerator {
         String utranCellBundle = "";
         String utranCellBlock = "";
         String pchFachRachHsdsch = "";
-        String serviceArea = "";
-        String locationArea = "";
         String coverageRelations = "";
         String embbededContent = "";
         String id = null;
+        utranCellBundle = getUtranBundleHeader(targetRNC);
         for(Document utranCell : utranCells){
         id = utranCell.getString("UtranCellId");
         utranCellBlock = getUtranCell(id, sourceMTX, sourceRNC, targetMTX, targetRNC);
         pchFachRachHsdsch = getPchRachFachHsdsch(id, sourceMTX, sourceRNC, targetMTX, targetRNC);
-        serviceArea = getServiceArea(id, sourceMTX, sourceRNC, targetMTX, targetRNC);
-        locationArea = getLocationArea(id, sourceMTX, sourceRNC, targetMTX, targetRNC);
         coverageRelations = getCoverageRelation(id, sourceMTX, sourceRNC, targetMTX, targetRNC);
         
-        embbededContent = pchFachRachHsdsch+"\n"+serviceArea+"\n"+locationArea+"\n"+coverageRelations;
+        embbededContent = pchFachRachHsdsch+"\n"+coverageRelations;
         
         utranCellBlock = utranCellBlock.replace("EMBBEDED-CONTENT", embbededContent);
         utranCellBundle += utranCellBlock;
         }
+        utranCellBundle += getUtranBundleFooter();
         return utranCellBundle;
     }
     
+    public static String generateExternalGsmCellBundle(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
+        return null;
+    }
+    
+    public static String generateExternalGsmRelationBundle(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
+        return null;
+    }
+    
+    public static String generateExternalUtranCellBundle(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
+        return null;
+    }
+    
+    public static String generateUtranRelationBundle(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
+        return null;
+    }
     //VsDataContainer
     public static String getLocationArea(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
         XMLEntity lacXML = XMLConf.getXmlEntities().get(ELEMENTS.LocationArea.toString());
@@ -133,7 +146,7 @@ public class XMLGenerator {
         TreeMap<String,String> param = null;
         for(Document sac : sacs){
         param = new TreeMap<>();
-        param.put("id", sac.getString("_id").replaceAll(sourceRNC+"_", ""));
+        param.put("id", sac.getString("ServiceAreaId"));
         param.put("sac", sac.getString("sac"));
         param.put("userLabel",sac.getString("userLabel"));
         return sacXML.generate(param,false);
@@ -182,10 +195,6 @@ public class XMLGenerator {
         String sac = null;
         String lac = null;
         String utranCellIubLink = null;
-        String accessClassNBarred = null;
-        String accessClassesBarredCs = null;
-        String accessClassesBarredPs = null;
-        String spareA = null;
         String utranCellsStr = "";
         for(Document utranCell : utranCells){
             //<editor-fold defaultstate="collapsed" desc="comment">
@@ -217,18 +226,11 @@ public class XMLGenerator {
         param.put("absPrioCellRes-sPrioritySearch2",((Document)utranCell.get("absPrioCellRes")).getString("sPrioritySearch2"));
         param.put("absPrioCellRes-threshServingLow",((Document)utranCell.get("absPrioCellRes")).getString("threshServingLow"));
         
-        accessClassNBarred = utranCell.getString("accessClassNBarred");
-        accessClassNBarred = accessClassNBarred.replaceAll(",", " ");
+
         
-        accessClassesBarredCs = utranCell.getString("accessClassesBarredCs");
-        accessClassesBarredCs = accessClassesBarredCs.replaceAll(",", " ");
-        
-        accessClassesBarredPs = utranCell.getString("accessClassesBarredPs");
-        accessClassesBarredPs = accessClassesBarredPs.replaceAll(",", " ");
-        
-        param.put("accessClassNBarred",accessClassNBarred);
-        param.put("accessClassesBarredCs",accessClassesBarredCs);
-        param.put("accessClassesBarredPs",accessClassesBarredPs);
+        param.put("accessClassNBarred",utranCell.getString("accessClassNBarred"));
+        param.put("accessClassesBarredCs",utranCell.getString("accessClassesBarredCs"));
+        param.put("accessClassesBarredPs",utranCell.getString("accessClassesBarredPs"));
 
         param.put("admBlockRedirection-gsmRrc",((Document)utranCell.get("admBlockRedirection")).getString("gsmRrc"));
         param.put("admBlockRedirection-rrc",((Document)utranCell.get("admBlockRedirection")).getString("rrc"));
@@ -429,10 +431,8 @@ public class XMLGenerator {
         param.put("sib1PlmnScopeValueTag",utranCell.getString("sib1PlmnScopeValueTag"));
         param.put("spare",utranCell.getString("spare"));
         
-        spareA = utranCell.getString("spareA");
-        spareA = spareA.replaceAll(",", " ");
-        
-        param.put("spareA",spareA);
+
+        param.put("spareA",utranCell.getString("spareA"));
         param.put("srbAdmExempt",utranCell.getString("srbAdmExempt"));
         param.put("standAloneSrbSelector",utranCell.getString("standAloneSrbSelector"));
         param.put("tCell",utranCell.getString("tCell"));
@@ -453,7 +453,7 @@ public class XMLGenerator {
         param.put("updateLocator",utranCell.getString("updateLocator"));
         param.put("usedFreqThresh2dEcno",utranCell.getString("usedFreqThresh2dEcno"));
         param.put("usedFreqThresh2dRscp",utranCell.getString("usedFreqThresh2dRscp"));
-        param.put("utranCellPosition","");
+//        param.put("utranCellPosition","");
         //</editor-fold>
         utranCellsStr += utranCellXML.generate(param,true);
         }
@@ -701,6 +701,20 @@ public class XMLGenerator {
                 "</configData>\n" +
                 "<fileFooter dateTime=\""+new Date()+"\"/>\n" +
                 "</bulkCmConfigDataFile>";
+    }
+    
+    public static String getUtranBundleHeader(String targetRNC){
+        return "<xn:SubNetwork id=\""+targetRNC+"\">\n" +
+                "<xn:MeContext id=\""+targetRNC+"\">\n" +
+                "<xn:ManagedElement id=\"1\">\n" +
+                "<un:RncFunction id=\"1\">\n";
+    }
+    
+    public static String getUtranBundleFooter(){
+        return "\n</un:RncFunction>\n" +
+                "</xn:ManagedElement>\n" +
+                "</xn:MeContext>\n" +
+                "</xn:SubNetwork>";
     }
     
     public static void main(String[] args) {

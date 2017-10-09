@@ -28,6 +28,7 @@ public class XSDReader {
             String line = null;
             XMLEntity entity = null;
             String entityName="";
+            int n=0;
             String type = XMLConf.getEntityType(filePath);
             boolean commented = false;
             boolean complex = false;
@@ -35,6 +36,7 @@ public class XSDReader {
             String previousEntityName="";
             int elementCount=0;
             while((line=raf.readLine())!=null){
+                n++;
                 //<editor-fold defaultstate="collapsed" desc="Element tags tracking">
                 if(line.contains("<element") && !line.contains("/>")){
                     elementCount++;
@@ -85,9 +87,9 @@ public class XSDReader {
                             XMLConf.addXmlElement(entity);
                         }
                     }else if(!getElementName(line).equals("attributes") && entity!=null && !complex){
-                        entity.addChild(type, previousEntityName,new XMLComplexElement().setName(getElementName(line)).setType("FLAT"));
+                        entity.addChild(type, previousEntityName,new XMLComplexElement().setName(getElementName(line)).setType("FLAT").setOrder(n));
                     }else if(!getElementName(line).equals("attributes") && entity!=null && complex){
-                        entity.addGrandChild(type,complexEntityName,  new XMLComplexElement().setName(getElementName(line)).setType("COMPLEX"));
+                        entity.addGrandChild(type,complexEntityName,  new XMLComplexElement().setName(getElementName(line)).setType("COMPLEX").setOrder(n));
                     }
                 }
                 
