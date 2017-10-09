@@ -44,7 +44,7 @@ public class AppConf {
                     XMLConf.setEsPath(line.split("~")[2]);
                 }else if(line.contains("MCC")){
                     XMLConf.setMCC(line.split("~")[2]);
-                }else if(line.contains("MNC")){
+                }else if(line.contains("MNC") && !line.contains("MNCLength")){
                     XMLConf.setMNC(line.split("~")[2]);
                 }else if(line.contains("MNCLength")){
                     XMLConf.setMNCLength(line.split("~")[2]);

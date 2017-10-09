@@ -28,7 +28,7 @@ import org.bson.Document;
  */
 public class XMLGenerator {
     
-    
+// Bundles 
     public static String generateUtranBundle(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
         FindIterable<Document> utranCells = MongoDB.getUtranCellCollection().find(
                 and(Filters.regex("_id", ".*"+siteName+".*"),Filters.eq("RNC", sourceRNC)));
@@ -39,7 +39,7 @@ public class XMLGenerator {
         String coverageRelations = "";
         String embbededContent = "";
         String id = null;
-        utranCellBundle = getUtranBundleHeader(targetRNC);
+//        utranCellBundle = getUtranBundleHeader(targetRNC);
         for(Document utranCell : utranCells){
         id = utranCell.getString("UtranCellId");
         utranCellBlock = getUtranCell(id, sourceMTX, sourceRNC, targetMTX, targetRNC);
@@ -51,26 +51,42 @@ public class XMLGenerator {
         utranCellBlock = utranCellBlock.replace("EMBBEDED-CONTENT", embbededContent);
         utranCellBundle += utranCellBlock;
         }
-        utranCellBundle += getUtranBundleFooter();
+//        utranCellBundle += getUtranBundleFooter();
         return utranCellBundle;
     }
     
     public static String generateExternalGsmCellBundle(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
-        return null;
+        return getExternalGsmCell(siteName, sourceMTX, sourceRNC, targetMTX, targetRNC);
     }
     
     public static String generateExternalGsmRelationBundle(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
-        return null;
+        FindIterable<Document> gsmRelations = MongoDB.getGsmRelationCollection().find(
+                and(Filters.regex("_id", ".*"+siteName+".*"),Filters.eq("RNC", sourceRNC)));
+        String id = null;
+        String gsmRelationBundle = "";
+        for(Document gsmRelation : gsmRelations){
+            id = gsmRelation.getString("GsmRelationId");
+            gsmRelationBundle += getUtranBundleHeader(targetRNC);
+            gsmRelationBundle += getGsmRelation(id, sourceMTX, sourceRNC, targetMTX, targetRNC);
+            gsmRelationBundle += getUtranBundleFooter();
+        }
+        
+        return gsmRelationBundle;
     }
     
     public static String generateExternalUtranCellBundle(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
-        return null;
+        return getExternalUtranCell(siteName, sourceMTX, sourceRNC, targetMTX, targetRNC);
     }
     
     public static String generateUtranRelationBundle(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
         return null;
     }
-    //VsDataContainer
+    
+
+
+
+
+//VsDataContainer
     public static String getLocationArea(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
         XMLEntity lacXML = XMLConf.getXmlEntities().get(ELEMENTS.LocationArea.toString());
         Document internallCell = MongoDB.getUtranCellCollection().find(
@@ -87,7 +103,7 @@ public class XMLGenerator {
         return "";
     }
     
-    // Seperate
+// Seperate
     public static String getIubLink(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
         XMLEntity iubLinkXML = XMLConf.getXmlEntities().get(ELEMENTS.IubLink.toString());
         FindIterable<Document> iubLinks = MongoDB.getIubLinkCollection().find(
@@ -138,7 +154,7 @@ public class XMLGenerator {
         return iubLinksStr;
     }
     
-    //VsDataContainer
+//VsDataContainer
     public static String getServiceArea(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
         XMLEntity sacXML = XMLConf.getXmlEntities().get(ELEMENTS.ServiceArea.toString());
         FindIterable<Document> sacs = MongoDB.getSacCollection().find(
@@ -154,7 +170,7 @@ public class XMLGenerator {
         return "";
     }
     
-    //Seperate
+//Seperate
     public static String getExternalGsmCell(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
         XMLEntity externalGsmCellXML = XMLConf.getXmlEntities().get(ELEMENTS.ExternalGsmCell.toString());
         FindIterable<Document> externalGsmCells = MongoDB.getExternalGsmCellCollection().find(
@@ -185,7 +201,7 @@ public class XMLGenerator {
         return externalGsmCellsStr;
     }
     
-    //Seperate
+//Seperate
     public static String getUtranCell(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
         XMLEntity utranCellXML = XMLConf.getXmlEntities().get(ELEMENTS.UtranCell.toString());
         FindIterable<Document> utranCells = MongoDB.getUtranCellCollection().find(
@@ -460,7 +476,7 @@ public class XMLGenerator {
         return utranCellsStr;
     }
     
-    //VsDataContainer
+//VsDataContainer
     public static String getPchRachFachHsdsch(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
         XMLEntity pchXML = XMLConf.getXmlEntities().get(ELEMENTS.Pch.toString());
         XMLEntity fachXML = XMLConf.getXmlEntities().get(ELEMENTS.Fach.toString());
@@ -548,7 +564,7 @@ public class XMLGenerator {
         return pchFachRachHsdschStr;
     }
     
-    //VsDataContainer
+//VsDataContainer
     public static String getCoverageRelation(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
         XMLEntity coverageXML = XMLConf.getXmlEntities().get(ELEMENTS.CoverageRelation.toString());
         FindIterable<Document> coverageRelations = MongoDB.getCoverageRelationCollection().find(
@@ -572,11 +588,11 @@ public class XMLGenerator {
         return coverageRelationStr;
     }
     
-    //Seperate
+//Seperate
     public static String getGsmRelation(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
         XMLEntity gsmRelationXML = XMLConf.getXmlEntities().get(ELEMENTS.GsmRelation.toString());
         FindIterable<Document> gsmRelations = MongoDB.getGsmRelationCollection().find(
-                and(Filters.regex("_id", ".*"+siteName+".*"),Filters.eq("RNC", sourceRNC)));
+                and(Filters.regex("_id", siteName),Filters.eq("RNC", sourceRNC)));
         TreeMap<String,String> param = null;
         String id = null;
         String gsmRelationStr="";
@@ -593,7 +609,7 @@ public class XMLGenerator {
         return gsmRelationStr;
     }
     
-    //Seperate
+//Seperate
     public static String getExternalUtranCell(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
         XMLEntity externalUtranXML = XMLConf.getXmlEntities().get(ELEMENTS.ExternalUtranCell.toString());
         FindIterable<Document> externalUtranCells = MongoDB.getExternalUtranCellCollection().find(
@@ -605,7 +621,6 @@ public class XMLGenerator {
         for(Document externalUtranCell : externalUtranCells){
         param = new TreeMap<>();
         //<editor-fold defaultstate="collapsed" desc="comment">
-        
         rncId = externalUtranCell.getString("_id");
         rncId = rncId.substring(rncId.indexOf("IurLink=")+8,rncId.indexOf("IurLink=")+13);
         param.put("id", externalUtranCell.getString("ExternalUtranCellId"));
@@ -632,7 +647,7 @@ public class XMLGenerator {
         param.put("hsAqmCongCtrlSpiSupport",externalUtranCell.getString("hsAqmCongCtrlSpiSupport"));
         param.put("hsAqmCongCtrlSupport",externalUtranCell.getString("hsAqmCongCtrlSupport"));
         param.put("individualOffset",externalUtranCell.getString("individualOffset"));
-        param.put("lbUtranCellOffloadCapacity",null);
+//        param.put("lbUtranCellOffloadCapacity",null);
         param.put("maxTxPowerUl",externalUtranCell.getString("maxTxPowerUl"));
         param.put("mncLength",XMLConf.getMNCLength());
         param.put("qQualMin",externalUtranCell.getString("qQualMin"));
@@ -648,7 +663,7 @@ public class XMLGenerator {
         return externalUtranCellStr;
     }
     
-    //Seperate
+//Seperate
     public static String getUtranRelation(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
         XMLEntity utranRelationXML = XMLConf.getXmlEntities().get(ELEMENTS.UtranRelation.toString());
         FindIterable<Document> utranRelations = MongoDB.getUtranRelationCollection().find(
@@ -687,7 +702,8 @@ public class XMLGenerator {
         }
         return utranRelationStr;
     }
-    
+
+// Footers and Headers    
     public static String getFileHeader(){
         return "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" +
                 XMLConf.getBulkCMHeader() +"\n"+
@@ -714,7 +730,7 @@ public class XMLGenerator {
         return "\n</un:RncFunction>\n" +
                 "</xn:ManagedElement>\n" +
                 "</xn:MeContext>\n" +
-                "</xn:SubNetwork>";
+                "</xn:SubNetwork>\n";
     }
     
     public static void main(String[] args) {

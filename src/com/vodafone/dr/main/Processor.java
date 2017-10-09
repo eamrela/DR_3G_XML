@@ -29,6 +29,7 @@ public class Processor {
     
     private static String workingDir = null;
     private static String scriptsDir = null;
+    private static TreeMap<String,TreeMap<Integer,String>> fileFooters = new TreeMap<>();
     
     public static void initApp(String confPath){
             System.out.println("Initializing App");
@@ -62,30 +63,30 @@ public class Processor {
                                                   entry.getValue().getTargetMTX(), 
                                                   entry.getValue().getTargetRNC());
             appendToFile(scriptsDir, entry.getValue().getSourceMTX(), entry.getValue().getTargetRNC(), "UtranBundle", UtranBundle);
-            ExtGsmCellBundle = XMLGenerator.generateUtranBundle(entry.getValue().getSiteName(),
+            ExtGsmCellBundle = XMLGenerator.generateExternalGsmCellBundle(entry.getValue().getSiteName(),
                                                     entry.getValue().getSourceMTX(),
                                                   entry.getValue().getSourceRNC(), 
                                                   entry.getValue().getTargetMTX(), 
                                                   entry.getValue().getTargetRNC());
             appendToFile(scriptsDir, entry.getValue().getSourceMTX(), entry.getValue().getTargetRNC(), "ExtGsmCellBundle", ExtGsmCellBundle);
-            ExtGsmRelationBundle = XMLGenerator.generateUtranBundle(entry.getValue().getSiteName(),
+            ExtGsmRelationBundle = XMLGenerator.generateExternalGsmRelationBundle(entry.getValue().getSiteName(),
                                                     entry.getValue().getSourceMTX(),
                                                   entry.getValue().getSourceRNC(), 
                                                   entry.getValue().getTargetMTX(), 
                                                   entry.getValue().getTargetRNC());
             appendToFile(scriptsDir, entry.getValue().getSourceMTX(), entry.getValue().getTargetRNC(), "ExtGsmRelationBundle", ExtGsmRelationBundle);
-            ExtUtranCellBundle = XMLGenerator.generateUtranBundle(entry.getValue().getSiteName(),
+            ExtUtranCellBundle = XMLGenerator.generateExternalUtranCellBundle(entry.getValue().getSiteName(),
                                                     entry.getValue().getSourceMTX(),
                                                   entry.getValue().getSourceRNC(), 
                                                   entry.getValue().getTargetMTX(), 
                                                   entry.getValue().getTargetRNC());
             appendToFile(scriptsDir, entry.getValue().getSourceMTX(), entry.getValue().getTargetRNC(), "ExtUtranCellBundle", ExtUtranCellBundle);
-            UtranRelationBundle = XMLGenerator.generateUtranBundle(entry.getValue().getSiteName(),
-                                                    entry.getValue().getSourceMTX(),
-                                                  entry.getValue().getSourceRNC(), 
-                                                  entry.getValue().getTargetMTX(), 
-                                                  entry.getValue().getTargetRNC());
-            appendToFile(scriptsDir, entry.getValue().getSourceMTX(), entry.getValue().getTargetRNC(), "UtranRelationBundle", UtranRelationBundle);
+//            UtranRelationBundle = XMLGenerator.generateUtranBundle(entry.getValue().getSiteName(),
+//                                                    entry.getValue().getSourceMTX(),
+//                                                  entry.getValue().getSourceRNC(), 
+//                                                  entry.getValue().getTargetMTX(), 
+//                                                  entry.getValue().getTargetRNC());
+//            appendToFile(scriptsDir, entry.getValue().getSourceMTX(), entry.getValue().getTargetRNC(), "UtranRelationBundle", UtranRelationBundle);
         }
     }
     
@@ -94,7 +95,8 @@ public class Processor {
         if(!mtxDir.exists()){
                 mtxDir.mkdir();
         }
-        File file = new File(dir+"/"+sourceMTX+"/"+targetRNC+"_"+fileName+".xml");
+        String filePath = dir+"/"+sourceMTX+"/"+targetRNC+"_"+fileName+".xml";
+        File file = new File(filePath);
         PrintWriter out = null;
         if ( file.exists() && !file.isDirectory() ) {
             try {
@@ -110,6 +112,13 @@ public class Processor {
             try {
                 out = new PrintWriter(file);
                 out.append(XMLGenerator.getFileHeader());
+                fileFooters.put(filePath, new TreeMap<>());
+                fileFooters.get(filePath).put(1, XMLGenerator.getFileFooter());
+                if(fileName.contains("UtranBundle")){
+                out.append(XMLGenerator.getUtranBundleHeader(targetRNC));
+                fileFooters.get(filePath).put(2, XMLGenerator.getUtranBundleFooter());
+                }
+                
                 out.append(script+"\n");
                 out.flush();
                 out.close();
