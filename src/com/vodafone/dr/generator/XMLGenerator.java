@@ -28,7 +28,7 @@ import org.bson.Document;
  */
 public class XMLGenerator {
     
-// Bundles 
+// ---------------------------------------------------------------------Bundles 
     public static String generateUtranBundle(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
         FindIterable<Document> utranCells = MongoDB.getUtranCellCollection().find(
                 and(Filters.regex("_id", ".*"+siteName+".*"),Filters.eq("RNC", sourceRNC)));
@@ -36,7 +36,10 @@ public class XMLGenerator {
         String utranCellBundle = "";
         String utranCellBlock = "";
         String pchFachRachHsdsch = "";
+        String serviceArea = "";
+        String locationArea = "";
         String coverageRelations = "";
+        String iubLink = "";
         String embbededContent = "";
         String id = null;
 //        utranCellBundle = getUtranBundleHeader(targetRNC);
@@ -44,15 +47,18 @@ public class XMLGenerator {
         id = utranCell.getString("UtranCellId");
         utranCellBlock = getUtranCell(id, sourceMTX, sourceRNC, targetMTX, targetRNC);
         pchFachRachHsdsch = getPchRachFachHsdsch(id, sourceMTX, sourceRNC, targetMTX, targetRNC);
+        serviceArea = getServiceArea(id, sourceMTX, sourceRNC, targetMTX, targetRNC);
+        locationArea = getLocationArea(id, sourceMTX, sourceRNC, targetMTX, targetRNC);
         coverageRelations = getCoverageRelation(id, sourceMTX, sourceRNC, targetMTX, targetRNC);
+        iubLink = getIubLink(siteName, sourceMTX, sourceRNC, targetMTX, targetRNC);
         
-        embbededContent = pchFachRachHsdsch+"\n"+coverageRelations;
+        embbededContent = serviceArea+"\n\n"+locationArea+"\n\n"+pchFachRachHsdsch+"\n\n"+coverageRelations;
         
         utranCellBlock = utranCellBlock.replace("EMBBEDED-CONTENT", embbededContent);
         utranCellBundle += utranCellBlock;
         }
 //        utranCellBundle += getUtranBundleFooter();
-        return utranCellBundle;
+        return iubLink+"\n\n"+utranCellBundle;
     }
     
     public static String generateExternalGsmCellBundle(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
@@ -65,7 +71,7 @@ public class XMLGenerator {
         String id = null;
         String gsmRelationBundle = "";
         for(Document gsmRelation : gsmRelations){
-            id = gsmRelation.getString("GsmRelationId");
+            id = gsmRelation.getString("_id");
             gsmRelationBundle += getUtranBundleHeader(targetRNC);
             gsmRelationBundle += getGsmRelation(id, sourceMTX, sourceRNC, targetMTX, targetRNC);
             gsmRelationBundle += getUtranBundleFooter();
@@ -79,13 +85,27 @@ public class XMLGenerator {
     }
     
     public static String generateUtranRelationBundle(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
-        return null;
+       FindIterable<Document> utranRelations = MongoDB.getUtranRelationCollection().find(
+                and(Filters.regex("_id", ".*UtranCell="+siteName+".*,UtranRelation=.*"),
+                   Filters.eq("RNC", sourceRNC)));
+        String id = null;
+        String utranCell=null;
+        String utranRelationBundle = "";
+        for(Document utranRelation : utranRelations){
+            id = utranRelation.getString("_id");
+            utranCell = utranRelation.getString("UtranRelationId");
+            utranCell = utranCell.substring(utranCell.indexOf("UtranCell=")+10, utranCell.indexOf(",UtranRelation="));
+            utranRelationBundle += getUtranRelationBundleHeader(targetRNC,utranCell);
+            utranRelationBundle += getUtranRelation(id, sourceMTX, sourceRNC, targetMTX, targetRNC);
+            utranRelationBundle += getUtranRelationBundleFooter();
+        }
+        return utranRelationBundle;
     }
-    
+ // ---------------------------------------------------------------------Bundles    
 
 
 
-
+// ---------------------------------------------------------------------Elements 
 //VsDataContainer
     public static String getLocationArea(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
         XMLEntity lacXML = XMLConf.getXmlEntities().get(ELEMENTS.LocationArea.toString());
@@ -114,40 +134,40 @@ public class XMLGenerator {
         param = new TreeMap<>();
         //<editor-fold defaultstate="collapsed" desc="comment">
         
-        param.put("id", iubLink.get("userLabel").toString());
-        param.put("userLabel", iubLink.get("userLabel").toString());
+        param.put("id", iubLink.getString("IubLinkId"));
+        param.put("userLabel", iubLink.getString("userLabel"));
         param.put("administrativeState", "0");
         param.put("atmUserPlaneTermSubrackRef", "Subrack=MS");
-        param.put("cachedRemoteCpIpAddress1", "");
-        param.put("cachedRemoteCpIpAddress2", "");
-        param.put("controlPlaneTransportOption-atm", ((Document)iubLink.get("controlPlaneTransportOption")).get("atm").toString());
-        param.put("controlPlaneTransportOption-ipv4", ((Document)iubLink.get("controlPlaneTransportOption")).get("ipv4").toString());
-        param.put("dlHwAdm", iubLink.get("dlHwAdm").toString());
-        param.put("l2EstReqRetryTimeNbapC", iubLink.get("l2EstReqRetryTimeNbapC").toString());
-        param.put("l2EstReqRetryTimeNbapD", iubLink.get("l2EstReqRetryTimeNbapD").toString());
-        param.put("linkType", iubLink.get("linkType").toString());
-        param.put("poolRedundancy",iubLink.get("poolRedundancy").toString());
-        param.put("rbsId", iubLink.get("rbsId").toString());
-        param.put("remoteCpIpAddress1", iubLink.get("remoteCpIpAddress1").toString());
-        param.put("remoteCpIpAddress2", iubLink.get("remoteCpIpAddress2").toString());
-        param.put("rncModuleAllocWeight", iubLink.get("rncModuleAllocWeight").toString());
-        param.put("rncModulePreferredRef", iubLink.get("rncModulePreferredRef").toString());
-        param.put("rncModuleReallocate", "");
-        param.put("rncModuleRef", "");
-        param.put("sctpRef", "");
-        param.put("softCongThreshGbrBwDl", iubLink.get("softCongThreshGbrBwDl").toString());
-        param.put("softCongThreshGbrBwUl", iubLink.get("softCongThreshGbrBwUl").toString());
-        param.put("spare", iubLink.get("spare").toString());
-        param.put("spareA", iubLink.get("spareA").toString());
-        param.put("ulHwAdm", iubLink.get("ulHwAdm").toString());
-        param.put("userPlaneGbrAdmBandwidthDl", iubLink.get("userPlaneGbrAdmBandwidthDl").toString());
-        param.put("userPlaneGbrAdmBandwidthUl", iubLink.get("userPlaneGbrAdmBandwidthUl").toString());
-        param.put("userPlaneGbrAdmEnabled", iubLink.get("userPlaneGbrAdmEnabled").toString());
-        param.put("userPlaneGbrAdmMarginDl", iubLink.get("userPlaneGbrAdmMarginDl").toString());
-        param.put("userPlaneGbrAdmMarginUl", iubLink.get("userPlaneGbrAdmMarginUl").toString());
-        param.put("userPlaneIpResourceRef", iubLink.get("userPlaneIpResourceRef").toString());
-        param.put("userPlaneTransportOption-atm", ((Document)iubLink.get("userPlaneTransportOption")).get("atm").toString());
-        param.put("userPlaneTransportOption-ipv4", ((Document)iubLink.get("userPlaneTransportOption")).get("ipv4").toString());
+//        param.put("cachedRemoteCpIpAddress1", "");
+//        param.put("cachedRemoteCpIpAddress2", "");
+        param.put("controlPlaneTransportOption-atm", ((Document)iubLink.get("controlPlaneTransportOption")).getString("atm"));
+        param.put("controlPlaneTransportOption-ipv4", ((Document)iubLink.get("controlPlaneTransportOption")).getString("ipv4"));
+        param.put("dlHwAdm", iubLink.getString("dlHwAdm"));
+        param.put("l2EstReqRetryTimeNbapC", iubLink.getString("l2EstReqRetryTimeNbapC"));
+        param.put("l2EstReqRetryTimeNbapD", iubLink.getString("l2EstReqRetryTimeNbapD"));
+        param.put("linkType", iubLink.getString("linkType"));
+        param.put("poolRedundancy",iubLink.getString("poolRedundancy"));
+        param.put("rbsId", iubLink.getString("rbsId"));
+        param.put("remoteCpIpAddress1", iubLink.getString("remoteCpIpAddress1"));
+        param.put("remoteCpIpAddress2", iubLink.getString("remoteCpIpAddress2"));
+        param.put("rncModuleAllocWeight", iubLink.getString("rncModuleAllocWeight"));
+        param.put("rncModulePreferredRef", iubLink.getString("rncModulePreferredRef"));
+//        param.put("rncModuleReallocate", "");
+//        param.put("rncModuleRef", "");
+//        param.put("sctpRef", "");
+        param.put("softCongThreshGbrBwDl", iubLink.getString("softCongThreshGbrBwDl"));
+        param.put("softCongThreshGbrBwUl", iubLink.getString("softCongThreshGbrBwUl"));
+        param.put("spare", iubLink.getString("spare"));
+        param.put("spareA", iubLink.getString("spareA"));
+        param.put("ulHwAdm", iubLink.getString("ulHwAdm"));
+        param.put("userPlaneGbrAdmBandwidthDl", iubLink.getString("userPlaneGbrAdmBandwidthDl"));
+        param.put("userPlaneGbrAdmBandwidthUl", iubLink.getString("userPlaneGbrAdmBandwidthUl"));
+        param.put("userPlaneGbrAdmEnabled", iubLink.getString("userPlaneGbrAdmEnabled"));
+        param.put("userPlaneGbrAdmMarginDl", iubLink.getString("userPlaneGbrAdmMarginDl"));
+        param.put("userPlaneGbrAdmMarginUl", iubLink.getString("userPlaneGbrAdmMarginUl"));
+        param.put("userPlaneIpResourceRef", iubLink.getString("userPlaneIpResourceRef"));
+        param.put("userPlaneTransportOption-atm", ((Document)iubLink.get("userPlaneTransportOption")).getString("atm"));
+        param.put("userPlaneTransportOption-ipv4", ((Document)iubLink.get("userPlaneTransportOption")).getString("ipv4"));
 //</editor-fold>
         iubLinksStr += iubLinkXML.generate(param,false);
         }
@@ -613,8 +633,7 @@ public class XMLGenerator {
     public static String getExternalUtranCell(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
         XMLEntity externalUtranXML = XMLConf.getXmlEntities().get(ELEMENTS.ExternalUtranCell.toString());
         FindIterable<Document> externalUtranCells = MongoDB.getExternalUtranCellCollection().find(
-                and(Filters.regex("_id", ".*"+siteName+".*"),
-                   Filters.not(Filters.eq("RNC", sourceRNC))));
+                and(Filters.regex("reservedBy", ".*UtranCell="+siteName+".*,UtranRelation=.*"),Filters.eq("RNC", sourceRNC)));
         TreeMap<String,String> param = null;
         String externalUtranCellStr="";
         String rncId = null;
@@ -667,17 +686,29 @@ public class XMLGenerator {
     public static String getUtranRelation(String siteName,String sourceMTX,String sourceRNC,String targetMTX,String targetRNC){
         XMLEntity utranRelationXML = XMLConf.getXmlEntities().get(ELEMENTS.UtranRelation.toString());
         FindIterable<Document> utranRelations = MongoDB.getUtranRelationCollection().find(
-                and(Filters.regex("_id", ".*UtranCell="+siteName+".*"),
+                and(Filters.regex("_id", siteName),
                    Filters.eq("RNC", sourceRNC)));
         String id = null;
         TreeMap<String,String> param = null;
         String utranRelationStr="";
+        String subNetwork = null;
+        String externalUtranCell=null;
         for(Document utranRelation : utranRelations){
         param = new TreeMap<>();
         id = utranRelation.getString("UtranRelationId"); 
         id = id.substring(id.indexOf("UtranRelation=")+14);
+        
+        subNetwork = utranRelation.getString("utranCellRef");
+        if(subNetwork.toLowerCase().contains("iur")){
+        subNetwork = subNetwork.substring(subNetwork.indexOf("IurLink=")+8,subNetwork.indexOf("IurLink=")+13);
+        }else{
+        subNetwork = targetRNC;
+        }
+        externalUtranCell = utranRelation.getString("utranCellRef");
+        externalUtranCell = externalUtranCell.substring(externalUtranCell.indexOf("UtranCell="));
+        externalUtranCell = externalUtranCell.replaceAll("UtranCell=", "");
         param.put("id", id);
-        param.put("adjacentCell",utranRelation.getString("utranCellRef").split("=")[1]);
+        param.put("adjacentCell","SubNetwork="+XMLConf.getSubNetwork()+",SubNetwork="+subNetwork+",MeContext="+subNetwork+",ManagedElement=1,RncFunction=1,UtranCell="+externalUtranCell);
         param.put("createdBy",utranRelation.getString("createdBy"));
         param.put("creationTime",utranRelation.getString("creationTime"));
         param.put("frequencyRelationType",utranRelation.getString("frequencyRelationType"));
@@ -703,6 +734,11 @@ public class XMLGenerator {
         return utranRelationStr;
     }
 
+    // ---------------------------------------------------------------------Elements
+    
+    
+    
+    
 // Footers and Headers    
     public static String getFileHeader(){
         return "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" +
@@ -733,9 +769,25 @@ public class XMLGenerator {
                 "</xn:SubNetwork>\n";
     }
     
+    public static String getUtranRelationBundleHeader(String targetRNC,String utranCell){
+        return "<xn:SubNetwork id=\""+targetRNC+"\">\n" +
+                "<xn:MeContext id=\""+targetRNC+"\">\n" +
+                "<xn:ManagedElement id=\"1\">\n" +
+                "<un:RncFunction id=\"1\">\n"
+                + "<un:UtranCell id=\""+utranCell+"\">\n";
+    }
+    
+    public static String getUtranRelationBundleFooter(){
+        return "\n</un:UtranCell>\n"
+                + "</un:RncFunction>\n" +
+                "</xn:ManagedElement>\n" +
+                "</xn:MeContext>\n" +
+                "</xn:SubNetwork>\n";
+    }
+    
     public static void main(String[] args) {
         initApp("C:\\Documents\\DR_3G\\DR3G.conf");
-        System.out.println(generateUtranBundle("UCAI2586", "Source", "CRX06", "Target", "RNC30"));
+        System.out.println(getIubLink("UCAI2586", "Source", "CRX06", "Target", "RNC30"));
     }
     
    

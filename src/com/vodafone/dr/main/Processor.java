@@ -57,6 +57,7 @@ public class Processor {
         String ExtUtranCellBundle = null;
         String UtranRelationBundle = null;
         for (Map.Entry<String, DR> entry : Plan.entrySet()) {
+            //<editor-fold defaultstate="collapsed" desc="Generation">
             UtranBundle = XMLGenerator.generateUtranBundle(entry.getValue().getSiteName(),
                                                     entry.getValue().getSourceMTX(),
                                                   entry.getValue().getSourceRNC(), 
@@ -81,21 +82,31 @@ public class Processor {
                                                   entry.getValue().getTargetMTX(), 
                                                   entry.getValue().getTargetRNC());
             appendToFile(scriptsDir, entry.getValue().getSourceMTX(), entry.getValue().getTargetRNC(), "ExtUtranCellBundle", ExtUtranCellBundle);
-//            UtranRelationBundle = XMLGenerator.generateUtranBundle(entry.getValue().getSiteName(),
-//                                                    entry.getValue().getSourceMTX(),
-//                                                  entry.getValue().getSourceRNC(), 
-//                                                  entry.getValue().getTargetMTX(), 
-//                                                  entry.getValue().getTargetRNC());
-//            appendToFile(scriptsDir, entry.getValue().getSourceMTX(), entry.getValue().getTargetRNC(), "UtranRelationBundle", UtranRelationBundle);
+            UtranRelationBundle = XMLGenerator.generateUtranRelationBundle(entry.getValue().getSiteName(),
+                                                    entry.getValue().getSourceMTX(),
+                                                  entry.getValue().getSourceRNC(), 
+                                                  entry.getValue().getTargetMTX(), 
+                                                  entry.getValue().getTargetRNC());
+            appendToFile(scriptsDir, entry.getValue().getSourceMTX(), entry.getValue().getTargetRNC(), "UtranRelationBundle", UtranRelationBundle);
+            //</editor-fold>
+        }
+        addFooters();
+    }
+    
+    public static void addFooters(){
+        for (Map.Entry<String, TreeMap<Integer, String>> footer : fileFooters.entrySet()) {
+            for (Map.Entry<Integer, String> innerFooter : footer.getValue().entrySet()) {
+                appendFooter(footer.getKey(), innerFooter.getValue());
+            }
         }
     }
     
     public static void appendToFile(String dir,String sourceMTX,String targetRNC,String fileName,String script){
-        File mtxDir = new File(dir+"/"+sourceMTX);
+        File mtxDir = new File(dir+"/"+sourceMTX+"/"+targetRNC);
         if(!mtxDir.exists()){
-                mtxDir.mkdir();
+                mtxDir.mkdirs();
         }
-        String filePath = dir+"/"+sourceMTX+"/"+targetRNC+"_"+fileName+".xml";
+        String filePath = dir+"/"+sourceMTX+"/"+targetRNC+"/"+targetRNC+"_"+fileName+".xml";
         File file = new File(filePath);
         PrintWriter out = null;
         if ( file.exists() && !file.isDirectory() ) {
@@ -113,13 +124,30 @@ public class Processor {
                 out = new PrintWriter(file);
                 out.append(XMLGenerator.getFileHeader());
                 fileFooters.put(filePath, new TreeMap<>());
-                fileFooters.get(filePath).put(1, XMLGenerator.getFileFooter());
+                fileFooters.get(filePath).put(2, XMLGenerator.getFileFooter());
                 if(fileName.contains("UtranBundle")){
                 out.append(XMLGenerator.getUtranBundleHeader(targetRNC));
-                fileFooters.get(filePath).put(2, XMLGenerator.getUtranBundleFooter());
+                fileFooters.get(filePath).put(1, XMLGenerator.getUtranBundleFooter());
                 }
                 
                 out.append(script+"\n");
+                out.flush();
+                out.close();
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(Processor.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+    
+    public static void appendFooter(String filePath,String footer){
+        
+        
+        File file = new File(filePath);
+        PrintWriter out = null;
+        if ( file.exists() && !file.isDirectory() ) {
+            try {
+                out = new PrintWriter(new FileOutputStream(file, true));
+                out.append(footer+"\n");
                 out.flush();
                 out.close();
             } catch (FileNotFoundException ex) {

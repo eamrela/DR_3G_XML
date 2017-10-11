@@ -345,9 +345,11 @@ public class XMLEntity {
     
     public String getParam(TreeMap<String,String> param,String key){
         if(param.containsKey(key)){
+             if(param.get(key)!=null){
             if(param.get(key).contains("i[")){
                 return null;
             }
+             }
             return param.get(key);
         }else{
             return null;

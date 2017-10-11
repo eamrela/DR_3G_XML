@@ -11,21 +11,22 @@ package com.vodafone.dr.configuration;
  */
 public enum ELEMENTS {
     // VALIDATED
-    UtranCell, // COMPLEX
-    Pch, // FLAT - UtranCell
-    Fach, // FLAT - UtranCell
-    Rach, // FLAT - UtranCell
-    Hsdsch, // FLAT - UtranCell
+    UtranCell, // COMPLEX - Done
+    Pch, // FLAT - UtranCell - Done
+    Fach, // FLAT - UtranCell - Done
+    Rach, // FLAT - UtranCell - Done
+    Hsdsch, // FLAT - UtranCell - Done
+    CoverageRelation, // COMPLEX - UtranCell - Done
+    
     IubLink, // COMPLEX - UtranCell
-    CoverageRelation, // COMPLEX - UtranCell
     ServiceArea, // FLAT - UtranCell
     LocationArea, // FLAT - UtranCell
     
     
-    GsmRelation, // FLAT - StandAlone
-    ExternalGsmCell, // FLAT - StandAlone
-    ExternalUtranCell, // COMPLEX - StandAlone
-    UtranRelation, // COMPLEX - StandAlone
+    GsmRelation, // FLAT - StandAlone - Done
+    ExternalGsmCell, // FLAT - StandAlone - Done
+    ExternalUtranCell, // COMPLEX - StandAlone - Done
+    UtranRelation, // COMPLEX - StandAlone - Done
     
     VsDataContainer // FLAT/COMPLEX
     
